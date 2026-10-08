@@ -1,0 +1,16 @@
+# Data files (embedded in dashboard.html already; keep raw sources out of the public repo)
+igcc_qnp_data.csv
+pod_data.json
+pod_data.json.gz
+scripts/report*.json
+
+# Reports and internal audit responses
+*.docx
+Audit response/
+Audit response wide/
+
+# Scratch
+scripts/check_*.py
+scripts/dedupe_*.py
+scripts/peek_lines.js
+scripts/embed_data.py
