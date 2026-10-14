@@ -7,7 +7,7 @@ igcc = pd.read_csv('igcc_qnp_data.csv')
 igcc['ORDERS_IGCC'] = igcc['ORDERS_IGCC'].fillna(0)
 igcc['dt'] = pd.to_datetime(igcc['ORDER_DATE'])
 
-w = pd.read_csv('Audit response wide/Pod Audit Tool - Audit Responses (Wide) deduped.csv')
+w = pd.read_csv('Audit response wide/Pod Audit Tool - Audit Responses (Wide) (3).csv')
 w['Date'] = pd.to_datetime(w['Date'])
 w = w.sort_values(['Store ID', 'Date'])
 aud = w.groupby('Store ID').agg(
@@ -95,5 +95,7 @@ data = {
 data = _nan_to_none(data)
 s = json.dumps(data, separators=(',', ':'))
 with gzip.open('pod_data.json.gz', 'wt') as f:
+    f.write(s)
+with open('pod_data.json', 'w', encoding='utf-8') as f:
     f.write(s)
 print('raw MB:', round(len(s) / 1e6, 1), '| gzipped MB:', round(len(gzip.compress(s.encode())) / 1e6, 1))

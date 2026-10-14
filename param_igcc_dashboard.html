@@ -1,0 +1,973 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Parameter × IGCC Dashboard</title>
+<style>
+:root {
+  --bg:#f4f6f8; --surface:#fff; --surface-2:#eef1f4; --text:#1a1d21; --text-2:#5c6470; --text-3:#8a919c;
+  --border:#e2e5ea; --accent:#2563eb; --good:#178a50; --warn:#b97a0a; --bad:#c93b3b;
+  --good-bg:#e3f3ea; --warn-bg:#faf0da; --bad-bg:#f9e4e4; --grid:#eceef1;
+  --shadow:0 1px 2px rgba(16,24,40,.06),0 1px 3px rgba(16,24,40,.08);
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#14161a; --surface:#1d2026; --surface-2:#262a31; --text:#eceef1; --text-2:#a2aab6; --text-3:#6f7885;
+  --border:#30353e; --accent:#6b9dfb; --good:#4cc98a; --warn:#e0a83e; --bad:#f07171;
+  --good-bg:#16352a; --warn-bg:#383015; --bad-bg:#3b2022; --grid:#2b303a; --shadow:0 1px 2px rgba(0,0,0,.4); }}
+:root[data-theme="dark"]{
+  --bg:#14161a; --surface:#1d2026; --surface-2:#262a31; --text:#eceef1; --text-2:#a2aab6; --text-3:#6f7885;
+  --border:#30353e; --accent:#6b9dfb; --good:#4cc98a; --warn:#e0a83e; --bad:#f07171;
+  --good-bg:#16352a; --warn-bg:#383015; --bad-bg:#3b2022; --grid:#2b303a; --shadow:0 1px 2px rgba(0,0,0,.4); }
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Segoe UI",system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.45;padding-bottom:48px}
+.wrap{max-width:1240px;margin:0 auto;padding:0 16px}
+header{padding:20px 0 4px}
+.hrow{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px}
+h1{font-size:20px;font-weight:650;letter-spacing:-.01em}
+h1 .icon{width:20px;height:20px;vertical-align:-4px;margin-right:8px;fill:var(--accent)}
+.period{color:var(--text-2);font-size:13px}
+.hbtns{margin-left:auto;display:flex;gap:8px}
+.tbtn{border:1px solid var(--border);background:var(--surface);color:var(--text-2);border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer}
+.tbtn:hover{color:var(--text);border-color:var(--text-3)}
+.src{font-size:11px;color:var(--text-3);margin-top:4px}
+.grain{display:flex;gap:4px;background:var(--surface-2);border-radius:10px;padding:4px;margin:14px 0 0;width:max-content}
+.grain button{border:none;background:transparent;color:var(--text-2);font-size:13px;font-weight:600;padding:6px 18px;border-radius:8px;cursor:pointer}
+.grain button.on{background:var(--surface);color:var(--text);box-shadow:var(--shadow)}
+nav{display:flex;gap:2px;border-bottom:2px solid var(--border);margin-top:14px;overflow-x:auto}
+nav button{border:none;background:none;color:var(--text-2);font-size:13.5px;font-weight:600;padding:10px 16px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+nav button.on{color:var(--accent);border-bottom-color:var(--accent)}
+nav button:hover{color:var(--text)}
+nav .icon{width:14px;height:14px;fill:currentColor}
+.filters{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:14px 0 4px}
+.filters label{font-size:12px;color:var(--text-2);font-weight:600}
+.filters select{border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:8px;padding:6px 10px;font-size:13px;min-width:130px}
+.filters .chip{font-size:11.5px;color:var(--text-3)}
+h2{font-size:15px;font-weight:650;margin:26px 0 4px;letter-spacing:-.01em}
+h2 .icon{width:15px;height:15px;vertical-align:-2px;margin-right:7px;fill:var(--text-2)}
+.sub{color:var(--text-2);font-size:12.5px;margin-bottom:12px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow);padding:16px}
+.card h3{font-size:13.5px;font-weight:650;margin-bottom:2px}
+.card .csub{font-size:12px;color:var(--text-2);margin-bottom:10px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin-top:14px}
+.kpi .kl{font-size:12px;color:var(--text-2);display:flex;justify-content:space-between}
+.kpi .kcat{font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em}
+.kpi .kv{font-size:27px;font-weight:650;margin:4px 0 2px;font-variant-numeric:tabular-nums}
+.kpi .kd{font-size:12px;font-variant-numeric:tabular-nums}
+.kpi canvas{display:block;width:100%;height:40px;margin-top:8px}
+.up{color:var(--good)}.down{color:var(--bad)}
+canvas.blk{display:block;width:100%}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:10px;font-size:12px;color:var(--text-2)}
+.legend .li{display:inline-flex;align-items:center;gap:6px}
+.legend .swl{width:14px;height:3px;border-radius:2px}
+.twrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;font-size:11.5px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:.04em;padding:8px 10px;border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:8px 10px;border-bottom:1px solid var(--grid);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+th.num{text-align:right}
+.cat-cell{font-weight:600}
+tr.catstart td{border-top:2px solid var(--border)}
+.pname{max-width:340px}
+.bar-cell{min-width:170px}
+.stacked{display:flex;height:14px;border-radius:4px;overflow:hidden;background:var(--surface-2)}
+.stacked span{height:100%}
+.s2{background:var(--good)}.s1{background:var(--warn)}.s0{background:var(--bad)}
+.cellg{background:var(--good-bg);color:var(--good);font-weight:600;text-align:center}
+.celly{background:var(--warn-bg);color:var(--warn);font-weight:600;text-align:center}
+.cellr{background:var(--bad-bg);color:var(--bad);font-weight:600;text-align:center}
+button.ov-chip{border:none;border-radius:12px;min-width:44px;padding:3px 10px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;background:var(--surface-2);color:var(--text)}
+button.ov-chip:hover{box-shadow:0 0 0 2px var(--accent)}
+button.ov-chip.c2{background:var(--good-bg);color:var(--good)}
+button.ov-chip.c1{background:var(--warn-bg);color:var(--warn)}
+button.ov-chip.c0{background:var(--bad-bg);color:var(--bad)}
+.svi{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:12px}
+@media(max-width:900px){.svi{grid-template-columns:1fr}}
+.wotbl td,.wotbl th{font-size:12.5px;padding:7px 8px}
+.zb{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.zg{background:var(--good)}.zy{background:var(--warn)}.zr{background:var(--bad)}
+.ztag{display:inline-flex;align-items:center;font-size:12px;font-weight:600;padding:3px 10px;border-radius:20px}
+.ztag.g{background:var(--good-bg);color:var(--good)}
+.ztag.y{background:var(--warn-bg);color:var(--warn)}
+.ztag.r{background:var(--bad-bg);color:var(--bad)}
+.zcols{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px}
+@media(max-width:900px){.zcols{grid-template-columns:1fr}}
+.zcol .zhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.zcol .zcount{font-size:22px;font-weight:650}
+.podlist{max-height:420px;overflow-y:auto;font-size:12.5px}
+.podlist .prow{display:flex;justify-content:space-between;gap:8px;padding:5px 8px;border-radius:6px}
+.podlist .prow:hover{background:var(--surface-2)}
+.arrow{color:var(--text-3);margin:0 4px}
+.mvchg{font-weight:600}
+.mv-up{color:var(--good)}.mv-dn{color:var(--bad)}
+.foot{margin-top:10px;font-size:11.5px;color:var(--text-3)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+@media(max-width:860px){.two{grid-template-columns:1fr}}
+.icon{width:14px;height:14px;vertical-align:-2px;margin-right:6px;fill:var(--text-2)}
+.hidden{display:none}
+section.tab{margin-top:6px}
+.notegrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+@media(max-width:860px){.notegrid{grid-template-columns:1fr}}
+.note{background:var(--surface-2);border-radius:10px;padding:12px 14px;font-size:12.5px;color:var(--text-2)}
+.note b{color:var(--text)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="hrow">
+    <h1><svg class="icon" viewBox="0 0 24 24"><path d="M3 13h4v8H3zm7-9h4v17h-4zm7 5h4v12h-4z"/></svg>Parameter × IGCC Dashboard</h1>
+    <span class="period" id="period"></span>
+    <div class="hbtns">
+      <button class="tbtn" id="themeBtn" type="button">◐ Theme</button>
+    </div>
+  </div>
+  <div class="src" id="srcNote"></div>
+</header>
+
+<div class="grain" id="grain">
+  <button data-g="D">Daily</button>
+  <button data-g="W" class="on">Weekly</button>
+  <button data-g="M">Monthly</button>
+</div>
+
+<nav id="nav">
+  <button data-t="exec" class="on"><svg class="icon" viewBox="0 0 24 24"><path d="M3 13h4v8H3zm7-9h4v17h-4zm7 5h4v12h-4z"/></svg>Executive Summary</button>
+  <button data-t="fnv">FnV</button>
+  <button data-t="dbem">DBE</button>
+  <button data-t="noice">Noice</button>
+  <button data-t="zones">POD Zones</button>
+  <button data-t="movement">POD Movement</button>
+</nav>
+
+<div class="filters" id="filters">
+  <label>Scope</label>
+  <select id="fScope">
+    <option value="all">Pan-India</option>
+    <option value="city">City</option>
+    <option value="pod">POD</option>
+  </select>
+  <select id="fCity" class="hidden"></select>
+  <select id="fPod" class="hidden"></select>
+  <span class="chip" id="filterInfo"></span>
+</div>
+
+<!-- ============ EXEC ============ -->
+<section class="tab" id="tab-exec">
+  <h2><svg class="icon" viewBox="0 0 24 24"><path d="M13 3a9 9 0 0 1 9 9h-9V3zM11 5v9a1 1 0 0 0 1 1h9a9 9 0 1 1-10-10z"/></svg>Score vs IGCC — week-on-week</h2>
+  <div class="sub">Category score = Σ P0 metric scores (latest audit per POD per week) ÷ (2 × no. of P0 metrics) × 100 (FnV max 6, DBE max 6, Noice max 18). IGCC % = quality-resolved ÷ orders × 100.</div>
+  <div class="card" style="margin-top:12px">
+    <h3>Week-on-week comparison</h3>
+    <div class="csub">Score (left) vs IGCC % (right) per category, per week. ▲▼ = change from previous week.</div>
+    <div class="twrap"><table class="wotbl" id="sviTable"></table></div>
+  </div>
+
+  <h2><svg class="icon" viewBox="0 0 24 24"><path d="M4 5h16v2H4zm0 6h16v2H4zm0 6h16v2H4z"/></svg>POD compliance overview</h2>
+  <div class="sub">Each POD counted once per metric at its latest audit's score (2 / 1 / 0). Green = Compliance (2) · amber = Partial (1) · red = Non-compliance (0).</div>
+  <div class="card" style="padding:0">
+    <div class="twrap"><table id="ovTable"></table></div>
+  </div>
+  <div class="foot">Scores recorded as 2 / 1 / 0. Percentages are of total PODs audited for that metric. IGCC % per category lives on the category tabs and in each week × parameter heat map's "IGCC %" row (FnV = FnV category; DBE = DBE category; Noice = DBE + Ice Cream combined).</div>
+</section>
+
+<!-- ============ CATEGORY TABS ============ -->
+<section class="tab hidden" id="tab-fnv"></section>
+<section class="tab hidden" id="tab-dbem"></section>
+<section class="tab hidden" id="tab-noice"></section>
+
+<!-- ============ ZONES ============ -->
+<section class="tab hidden" id="tab-zones">
+  <h2>POD Zones — compliance grouping</h2>
+  <div class="sub" id="znSub">PODs grouped by score: Green zone 100% · Yellow zone 51–99% · Red zone &lt;51%.</div>
+  <div class="card" style="margin-top:12px;padding:14px 16px" id="znSummary"></div>
+  <div class="filters" id="znFilters">
+    <label>Week</label>
+    <select id="znWeek"></select>
+    <label>Category</label>
+    <select id="znCat">
+      <option value="all">All categories (overall)</option>
+      <option value="FnV">FnV (3 params)</option>
+      <option value="DBEM">DBE (Ambient Noice params)</option>
+      <option value="Noice">Noice (9 params)</option>
+    </select>
+    <label>POD</label>
+    <input id="znPod" type="text" placeholder="Search POD by name or ID…" autocomplete="off"
+      style="border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:8px;padding:6px 10px;font-size:13px;min-width:210px">
+    <span class="chip" id="znCount"></span>
+  </div>
+  <div class="zcols" id="zoneCols"></div>
+  <div class="foot" id="znFoot"></div>
+
+  <h2>Zone movement — week over week</h2>
+  <div class="sub">PODs whose zone changed between consecutive weeks (e.g. red → yellow = improved).</div>
+  <div class="card" style="padding:0">
+    <div class="twrap"><table id="mvTable"></table></div>
+  </div>
+  <div class="foot" id="mvFoot"></div>
+</section>
+
+<!-- ============ POD MOVEMENT ============ -->
+<section class="tab hidden" id="tab-movement">
+  <h2>POD movement — zone week on week</h2>
+  <div class="sub" id="mvSub"></div>
+
+  <div class="filters" id="mvFilters">
+    <label>Watchlist</label>
+    <select id="mvList">
+      <option value="all">All PODs</option>
+      <option value="rec">▲ Recovered (improved, never declined)</option>
+      <option value="dec">▼ Declined (went down, never up)</option>
+      <option value="red">🔴 Still red (every audited week)</option>
+      <option value="flat">▬ Flat (no zone change)</option>
+      <option value="chg">⇅ Changed zone at least once</option>
+      <option value="up">▲ Improved only</option>
+      <option value="dn">▼ Declined only</option>
+      <option value="mix">⇅ Mixed (both up and down)</option>
+    </select>
+    <label>City</label>
+    <select id="mvCity"><option value="">All cities</option></select>
+    <label>POD</label>
+    <input id="mvPod" type="text" placeholder="Search POD by name or ID…" autocomplete="off"
+      style="border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:8px;padding:6px 10px;font-size:13px;min-width:210px">
+    <label>Rows</label>
+    <select id="mvLimit"><option>60</option><option selected>150</option><option>400</option><option value="all">All</option></select>
+    <span class="chip" id="mvCount"></span>
+  </div>
+  <div id="mvPodAc" class="hidden" style="position:relative"></div>
+
+  <div class="card" style="padding:0">
+    <div class="twrap"><table id="mvMatrix"></table></div>
+  </div>
+  <div class="foot">– = not audited that week. Zones on this tab: 0–50% red · 51–99% yellow · 100% green (perfect score only). Watchlist buckets use the whole window; movement classification: ▲ improved = every change went up · ▼ declined = every change went down.</div>
+</section>
+
+<footer class="foot" style="margin-top:28px" id="pageFoot"></footer>
+</div>
+
+<script src="param_igcc_dashboard_data.js"></script>
+<script>
+const DATA = window.DASHBOARD_DATA;
+const CATS = ["FnV", "DBEM", "Noice"];
+const state = { grain: "W", tab: "exec", scope: "all", city: "", pod: "" };
+
+/* ---------- theme ---------- */
+const themeBtn = document.getElementById('themeBtn');
+function applyTheme(t){
+  if(t==='dark') document.documentElement.setAttribute('data-theme','dark');
+  else if(t==='light') document.documentElement.setAttribute('data-theme','light');
+  else document.documentElement.removeAttribute('data-theme');
+  renderAll();
+  try{ localStorage.setItem('pigcc-theme',t||''); }catch(e){}
+}
+themeBtn.addEventListener('click',()=>{
+  const cur=document.documentElement.getAttribute('data-theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+  applyTheme(cur==='dark'?'light':'dark');
+});
+let saved=null; try{ saved=localStorage.getItem('pigcc-theme'); }catch(e){}
+if(saved) applyTheme(saved);
+function cv(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+
+/* ---------- helpers ---------- */
+const fmt=(v,d=2)=>(v==null||isNaN(v))?'–':Number(v).toFixed(d);
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+const last=a=>a&&a.length?a[a.length-1]:null;
+const ZN={g:'Green zone',y:'Yellow zone',r:'Red zone'};
+const zColor=z=>z==='g'?cv('--good'):z==='y'?cv('--warn'):cv('--bad');
+function colorFor(i){ return [cv('--accent'),cv('--good'),cv('--warn')][i%3]; }
+function scoreColor(v){ if(v==null||isNaN(v))return cv('--text-3'); return v>=100?cv('--good'):v>=51?cv('--warn'):v!=null?cv('--bad'):cv('--text-3'); }
+function cellCls(v){ return v==null?'':v>=100?'cellg':v>=51?'celly':'cellr'; }
+function deltaHtml(d,dgt=2){
+  if(d==null||isNaN(d))return'';
+  return `<span class="${d>=0?'up':'down'}">${d>=0?'▲':'▼'} ${fmt(Math.abs(d),dgt)}</span>`;
+}
+function prevDelta(arr){
+  const idx=arr.map((v,i)=>[i,v]).filter(x=>x[1]!=null);
+  if(idx.length<2)return null;
+  return idx[idx.length-1][1]-idx[idx.length-2][1];
+}
+function setupCanvas(cvh){
+  const dpr=window.devicePixelRatio||1;
+  const w=cvh.parentElement.clientWidth-2;
+  cvh.width=Math.round(w*dpr); cvh.height=Math.round(cvh.dataset.h*dpr);
+  cvh.style.height=cvh.dataset.h+'px';
+  const ctx=cvh.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
+  return {ctx,w,h:+cvh.dataset.h};
+}
+
+/* ---------- data access by grain/scope ---------- */
+function podLabel(s){
+  const p=DATA.pods[s]||{};
+  return p.name ? `${p.name} · ${s}` : s;
+}
+function activePods(){
+  if(state.scope==='pod'&&state.pod) return [state.pod];
+  const pods=Object.keys(DATA.pods);
+  if(state.scope==='city'&&state.city) return pods.filter(s=>DATA.pods[s].city===state.city);
+  return pods;
+}
+function seriesForGrain(cat){
+  const agg=scopeAgg();
+  if(state.grain==='W'){
+    return {
+      labels:DATA.weeks,
+      score:DATA.weeks.map(w=>agg.score_weekly[cat][w]),
+      igcc:(DATA.igcc[cat==='DBEM'?'DBE':cat]||[]).map(r=>r.pct),
+      audits:DATA.weeks.map(w=>agg.audits_per_week[w]),
+    };
+  }
+  if(state.grain==='D'){
+    const dates=DATA.dates, out={labels:dates,score:[],igcc:[],audits:[]};
+    dates.forEach(d=>{
+      const e=agg.daily[d]; out.score.push(e?e[cat]:null); out.audits.push(e?e.audits:0);
+    });
+    out.igcc=dates.map(d=>{ const w=weekOfDate(d); const r=(DATA.igcc[cat==='DBEM'?'DBE':cat]||[]).find(x=>x.week===w); return r?r.pct:null; });
+    return out;
+  }
+  const months=DATA.months, out={labels:months,score:[],igcc:[],audits:[]};
+  months.forEach(m=>{ const e=agg.monthly[m]; out.score.push(e?e[cat]:null); out.audits.push(e?e.audits:0); });
+  out.igcc=months.map(m=>{
+    const wsInMonth=DATA.dates.filter(d=>d.startsWith(m)).map(weekOfDate);
+    const rs=(DATA.igcc[cat==='DBEM'?'DBE':cat]||[]).filter(r=>wsInMonth.includes(r.week));
+    return rs.length?rs.reduce((s,r)=>s+r.pct,0)/rs.length:null;
+  });
+  return out;
+}
+
+/* ---------- scope-aware aggregates ----------
+ Recomputes metric_weekly / score_weekly / audits_per_week / daily / monthly
+ over activePods() from per-POD per-metric weekly scores. Memoized per scope. */
+let _aggKey=null,_agg=null;
+function scopeAgg(){
+  const pods=activePods().slice().sort().join(',');
+  if(_aggKey===pods) return _agg;
+  const set=new Set(activePods());
+  const METRICS=DATA.metrics, GROUPS=DATA.metric_groups, weeks=DATA.weeks;
+
+  const metric_weekly={}; METRICS.forEach(m=>metric_weekly[m]={});
+  const sums={},cnts={};
+  const audits_per_week={}; weeks.forEach(w=>audits_per_week[w]=0);
+  const daily={}, monthly={};
+  const dSums={},dCnts={},mSums={},mCnts={};
+  DATA.dates.forEach(d=>{ daily[d]={audits:0}; dSums[d]={}; dCnts[d]={}; });
+  DATA.months.forEach(mo=>{ monthly[mo]={audits:0}; mSums[mo]={}; mCnts[mo]={}; });
+
+  Object.keys(DATA.pod_metric_weekly).forEach(s=>{
+    if(!set.has(s)) return;
+    const pmw=DATA.pod_metric_weekly[s];
+    weeks.forEach(w=>{
+      const arr=pmw[w]; if(!arr) return;
+      audits_per_week[w]++;
+      const date=DATA.pods[s].weeks[w].date;
+      const mo=date.slice(0,7);
+      arr.forEach((v,i)=>{
+        const m=METRICS[i]; if(v==null) return;
+        sums[m]=sums[m]||{}; cnts[m]=cnts[m]||{};
+        sums[m][w]=(sums[m][w]||0)+v; cnts[m][w]=(cnts[m][w]||0)+1;
+        // daily/monthly: sum raw scores per POD bucket then average per metric
+        dSums[date][m]=(dSums[date][m]||0)+v; dCnts[date][m]=(dCnts[date][m]||0)+1;
+        mSums[mo][m]=(mSums[mo][m]||0)+v; mCnts[mo][m]=(mCnts[mo][m]||0)+1;
+      });
+    });
+  });
+
+  METRICS.forEach(m=>{
+    weeks.forEach(w=>{
+      metric_weekly[m][w]=cnts[m]&&cnts[m][w]?round2(sums[m][w]/cnts[m][w]/2*100):null;
+    });
+  });
+  const score_weekly={};
+  Object.keys(GROUPS).forEach(cat=>{
+    const mets=GROUPS[cat];
+    score_weekly[cat]={};
+    weeks.forEach(w=>{
+      let total=0;
+      mets.forEach(m=>{
+        if(cnts[m]&&cnts[m][w]) total+=sums[m][w]/cnts[m][w]; // metric avg score, out of 2
+      });
+      score_weekly[cat][w]=round2(total/(mets.length*2)*100);
+    });
+  });
+  function bucketScore(storeSums,storeCnts,label,host,auditsHost){
+    host[label]=host[label]||{audits:0};
+    let total=0;
+    Object.keys(GROUPS).forEach(cat=>{
+      let catTotal=0;
+      GROUPS[cat].forEach(m=>{
+        if(storeCnts[label][m]) catTotal+=storeSums[label][m]/storeCnts[label][m]/2;
+      });
+      host[label][cat]=round2(catTotal/(GROUPS[cat].length*2)*100);
+    });
+  }
+  // daily/monthly per metric: average across PODs then apply formula
+  DATA.dates.forEach(d=>{
+    let total={};
+    Object.keys(GROUPS).forEach(cat=>{
+      let catTotal=0;
+      GROUPS[cat].forEach(m=>{
+        if(dCnts[d][m]) catTotal+=(dSums[d][m]/dCnts[d][m]); // metric avg score, out of 2
+      });
+      daily[d][cat]=round2(catTotal/(GROUPS[cat].length*2)*100);
+    });
+    daily[d].audits=Object.values(DATA.pods).filter(p=>false).length; // set below
+  });
+  // audits per date/month over active pods (latest audit per POD per date)
+  const audByDate={},audByMonth={};
+  Object.keys(DATA.pods).forEach(s=>{
+    if(!set.has(s)) return;
+    Object.values(DATA.pods[s].weeks).forEach(x=>{ audByDate[x.date]=(audByDate[x.date]||0)+1; });
+  });
+  DATA.dates.forEach(d=>{ daily[d].audits=audByDate[d]||0; });
+  DATA.months.forEach(mo=>{
+    let catTotals={};
+    DATA.dates.filter(d=>d.startsWith(mo)).forEach(d=>{
+      Object.keys(GROUPS).forEach(cat=>{
+        catTotals[cat]=catTotals[cat]||[];
+        catTotals[cat].push(daily[d][cat]);
+      });
+    });
+    // monthly = same formula over the month's audits (not avg of dailies)
+    let mTotal={};
+    Object.keys(GROUPS).forEach(cat=>{
+      let catTotal=0;
+      GROUPS[cat].forEach(m=>{
+        if(mCnts[mo][m]) catTotal+=(mSums[mo][m]/mCnts[mo][m]); // metric avg score, out of 2
+      });
+      monthly[mo][cat]=round2(catTotal/(GROUPS[cat].length*2)*100);
+      delete mTotal[cat];
+    });
+    const moAudits=DATA.dates.filter(d=>d.startsWith(mo)).reduce((a,d)=>a+(audByDate[d]||0),0);
+    monthly[mo].audits=moAudits;
+  });
+
+  _aggKey=pods; _agg={metric_weekly,score_weekly,audits_per_week,daily,monthly};
+  return _agg;
+}
+function round2(v){ return Math.round(v*100)/100; }
+let _ws=null;
+function weekStarts(){
+  if(_ws)return _ws;
+  _ws=[...new Set(Object.values(DATA.pods).flatMap(p=>Object.values(p.weeks).map(x=>x.date)))].sort();
+  return _ws;
+}
+function weekOfDate(d){
+  const starts=weekStarts();
+  let lab=DATA.weeks[0];
+  for(let i=0;i<starts.length;i++){ if(d>=starts[i]) lab=DATA.weeks[i]; }
+  return lab;
+}
+
+/* ---------- line chart ---------- */
+function Y2(v,lo,hi,t,ih){ return t+ih-(v-lo)/((hi-lo)||1)*ih; }
+function drawLine(ctx,vals,X,Y,color){
+  ctx.beginPath();
+  let started=false;
+  vals.forEach((v,i)=>{ if(v==null)return; started?ctx.lineTo(X(i),Y(v)):ctx.moveTo(X(i),Y(v)); started=true; });
+  ctx.strokeStyle=color;ctx.lineWidth=2;ctx.lineJoin='round';ctx.stroke();
+  vals.forEach((v,i)=>{ if(v==null)return;
+    ctx.beginPath();ctx.arc(X(i),Y(v),3,0,Math.PI*2);ctx.fillStyle=color;ctx.fill(); });
+}
+function shortLbl(l){ return state.grain==='W'?l:state.grain==='D'?l.slice(5):l.slice(2); }
+function lineChart(cvh,labels,seriesList,opts={}){
+  const {ctx,w,h}=setupCanvas(cvh);
+  ctx.clearRect(0,0,w,h);
+  const all=seriesList.flatMap(s=>s.values.filter(v=>v!=null));
+  if(!all.length) return;
+  let min=Math.min(...all),max=Math.max(...all);
+  const padY=(max-min)*(opts.pad??0.15)||1;
+  if(!opts.zeroBase){min-=padY;max+=padY;}else{min=Math.max(0,min-padY);}
+  const m={l:opts.ml??44,r:opts.mr??12,t:10,b:26};
+  const iw=w-m.l-m.r,ih=h-m.t-m.b;
+  const n=labels.length;
+  const X=i=>n>1?m.l+i*iw/(n-1):m.l+iw/2;
+  const Y=v=>m.t+ih-(v-min)/((max-min)||1)*ih;
+  ctx.strokeStyle=cv('--grid');ctx.fillStyle=cv('--text-3');
+  ctx.lineWidth=1;ctx.font='11px "Segoe UI",sans-serif';
+  if(opts.dual){
+    const sc=seriesList[0], ig=seriesList[1];
+    const sAll=sc.values.filter(v=>v!=null), iAll=ig.values.filter(v=>v!=null);
+    const sMin=Math.min(...sAll)*0.9, sMax=Math.max(...sAll)*1.05;
+    const iMin=0, iMax=Math.max(...iAll)*1.2||1;
+    ctx.textAlign='right';ctx.textBaseline='middle';
+    for(let g=0;g<=4;g++){
+      const v=sMin+(sMax-sMin)*g/4, y=Y2(v,sMin,sMax,m.t,ih);
+      ctx.beginPath();ctx.moveTo(m.l,y);ctx.lineTo(w-m.r,y);ctx.stroke();
+      ctx.fillText(v.toFixed(0),m.l-6,y);
+    }
+    ctx.textAlign='left';
+    for(let g=0;g<=4;g++){
+      const v=iMin+(iMax-iMin)*g/4, y=Y2(v,iMin,iMax,m.t,ih);
+      ctx.fillText(v.toFixed(2),w-m.r+2,y);
+    }
+    ctx.textAlign='center';ctx.textBaseline='top';
+    const step=Math.ceil(n/12);
+    labels.forEach((l,i)=>{ if(i%step===0) ctx.fillText(shortLbl(l),X(i),h-m.b+8); });
+    [[sc,sMin,sMax],[ig,iMin,iMax]].forEach(([s,lo,hi])=>{
+      drawLine(ctx,s.values,X,(v)=>Y2(v,lo,hi,m.t,ih),s.color);
+    });
+    return;
+  }
+  for(let g=0;g<=4;g++){
+    const v=min+(max-min)*g/4,y=Y(v);
+    ctx.beginPath();ctx.moveTo(m.l,y);ctx.lineTo(w-m.r,y);ctx.stroke();
+    ctx.textAlign='right';ctx.textBaseline='middle';
+    ctx.fillText(v.toFixed(opts.dec??1),m.l-6,y);
+  }
+  ctx.textAlign='center';ctx.textBaseline='top';
+  const step=Math.ceil(n/12);
+  labels.forEach((l,i)=>{ if(i%step===0) ctx.fillText(shortLbl(l),X(i),h-m.b+8); });
+  seriesList.forEach(s=>drawLine(ctx,s.values,X,Y,s.color));
+}
+
+/* ---------- sparkline ---------- */
+function spark(cv,values,color){
+  const dpr=window.devicePixelRatio||1,w=cv.parentElement.clientWidth-2,h=40;
+  cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);cv.style.height=h+'px';
+  const ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,w,h);
+  const idx=values.map((v,i)=>[i,v]).filter(x=>x[1]!=null);
+  if(idx.length<2)return;
+  const vals=idx.map(x=>x[1]);
+  const min=Math.min(...vals),max=Math.max(...vals),pad=6,span=(max-min)||1;
+  const X=i=>pad+i*(w-pad*2)/(values.length-1);
+  const Y=v=>h-pad-(v-min)/span*(h-pad*2);
+  ctx.beginPath();ctx.moveTo(X(idx[0][0]),h);
+  idx.forEach(([i,v])=>ctx.lineTo(X(i),Y(v)));
+  ctx.lineTo(X(idx[idx.length-1][0]),h);ctx.closePath();
+  ctx.globalAlpha=.12;ctx.fillStyle=color;ctx.fill();ctx.globalAlpha=1;
+  ctx.beginPath();idx.forEach(([i,v],j)=>j?ctx.lineTo(X(i),Y(v)):ctx.moveTo(X(i),Y(v)));
+  ctx.strokeStyle=color;ctx.lineWidth=1.8;ctx.lineJoin='round';ctx.stroke();
+  const [li,lv]=idx[idx.length-1];
+  ctx.beginPath();ctx.arc(X(li),Y(lv),2.8,0,Math.PI*2);ctx.fillStyle=color;ctx.fill();
+}
+
+/* ---------- EXEC: score vs IGCC WoW table ---------- */
+function renderSviTable(){
+  const tbl=document.getElementById('sviTable');
+  const ser={}; CATS.forEach(c=>ser[c]=seriesForGrain(c));
+  const n=ser.FnV.labels.length;
+  let html=`<thead><tr><th>Category</th>`;
+  for(let i=0;i<n;i++){
+    html+=`<th colspan="2" style="text-align:center;border-left:1px solid var(--border)">${shortLbl(ser.FnV.labels[i])}</th>`;
+  }
+  html+=`</tr><tr><th></th>`;
+  for(let i=0;i<n;i++){ html+=`<th class="num" style="border-left:1px solid var(--border)">Score</th><th class="num">IGCC%</th>`; }
+  html+=`</tr></thead><tbody>`;
+  CATS.forEach(cat=>{
+    html+=`<tr><td class="cat-cell">${cat}</td>`;
+    let prevSc=null,prevIg=null;
+    for(let i=0;i<n;i++){
+      const s=ser[cat].score[i], g=ser[cat].igcc[i];
+      const dS=prevSc!=null&&s!=null?s-prevSc:null;
+      const dG=prevIg!=null&&g!=null?g-prevIg:null;
+      html+=`<td class="num" style="border-left:1px solid var(--border);color:${scoreColor(s)};font-weight:600">${fmt(s,1)}${dS!=null?` <span style="font-size:10.5px" class="${dS>=0?'up':'down'}">${dS>=0?'▲':'▼'}${fmt(Math.abs(dS),1)}</span>`:''}</td>`;
+      html+=`<td class="num">${fmt(g)}${dG!=null?` <span style="font-size:10.5px" class="${dG>=0?'up':'down'}">${dG>=0?'▲':'▼'}${fmt(Math.abs(dG))}</span>`:''}</td>`;
+      prevSc=s;prevIg=g;
+    }
+    html+=`</tr>`;
+  });
+  html+=`</tbody>`;
+  tbl.innerHTML=html;
+}
+
+/* ---------- EXEC: overview table (same as Excel) ---------- */
+function renderOverview(){
+  const tbl=document.getElementById('ovTable');
+  const igccLbl={FnV:'FnV',DBE:'DBE',Noice:'Noice'};
+  let html=`<thead><tr><th>Category</th><th>P0 Parameter</th>
+    <th class="num">Compliant (2)</th><th class="num">Partial (1)</th><th class="num">Non-comp. (0)</th>
+    <th class="num">Total PODs</th><th class="num">% Compl.</th><th class="num">% Partial</th><th class="num">% Non-c.</th><th>Split</th>
+  </tr></thead><tbody>`;
+  let prev=null;
+  DATA.overview.forEach((r,ri)=>{
+    const tot=r.total||1;
+    const start=r.category!==prev;
+    const cnt=(lvl)=>`<td class="num"><button class="ov-chip c${lvl}" data-ri="${ri}" data-lvl="${lvl}">${r['c'+lvl]}</button></td>`;
+    html+=`<tr${start?' class="catstart"':''}>
+      <td class="cat-cell">${start?esc(r.category):''}</td>
+      <td class="pname" title="${esc(r.param)}">${esc(r.param.length>52?r.param.slice(0,52)+'…':r.param)}</td>
+      ${cnt(2)}${cnt(1)}${cnt(0)}
+      <td class="num" style="color:var(--text-2)">${r.total}</td>
+      <td class="num" style="color:var(--good);font-weight:600">${r.pct2}</td>
+      <td class="num" style="color:var(--warn)">${r.pct1}</td>
+      <td class="num" style="color:var(--bad)">${r.pct0}</td>
+      <td class="bar-cell"><div class="stacked">
+        <span class="s2" style="width:${r.c2/tot*100}%"></span><span class="s1" style="width:${r.c1/tot*100}%"></span><span class="s0" style="width:${r.c0/tot*100}%"></span>
+      </div></td></tr>`;
+    prev=r.category;
+  });
+  tbl.innerHTML=html+'</tbody>';
+}
+
+/* ---------- overview POD drawer ---------- */
+const OVL={2:['Compliance (2)','cellg'],1:['Partial compliance (1)','celly'],0:['Non-compliance (0)','cellr']};
+function showOverviewDrawer(ri,lvl){
+  const r=DATA.overview[ri];
+  const pods=(DATA.overview_pod_lists[r.param+'|'+lvl])||[];
+  const [lvlTxt,cls]=OVL[lvl];
+  let dw=document.getElementById('ovDrawer');
+  if(!dw){
+    dw=document.createElement('div');
+    dw.id='ovDrawer';
+    dw.className='card';
+    dw.style.marginTop='12px';
+    document.getElementById('ovTable').closest('.card').after(dw);
+  }
+  dw.innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px">
+      <h3 style="margin:0"><span class="ztag ${lvl===2?'g':lvl===1?'y':'r'}">${lvlTxt}</span> — ${esc(r.param)}</h3>
+      <span style="display:flex;gap:8px;align-items:center">
+        <span style="font-size:12px;color:var(--text-2)">${pods.length} PODs</span>
+        <button class="tbtn" id="ovDrawerClose">Close</button>
+      </span>
+    </div>
+    <div class="twrap" style="max-height:340px;overflow-y:auto">
+      <table><thead><tr><th>Store ID</th><th>Store name</th><th>City</th><th class="num">Avg score (0–2)</th></tr></thead>
+      <tbody>${pods.map(p=>`<tr><td class="num">${esc(p[0])}</td><td>${esc(p[1]||'—')}</td><td>${esc(p[2]||'—')}</td><td class="num">${p[3].toFixed(2)}</td></tr>`).join('')||'<tr><td colspan="4" style="color:var(--text-3);padding:12px">No PODs.</td></tr>'}
+      </tbody></table>
+    </div>
+    <div class="foot">Score = the POD's latest audit on this parameter (2/1/0; 2nd audit where a POD was audited twice, 1st where once). If the latest audit left the cell blank, the earlier audit's average is used. Sorted by store ID.</div>`;
+  dw.style.display='';
+  dw.querySelector('#ovDrawerClose').onclick=()=>{ dw.style.display='none'; };
+  dw.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+document.addEventListener('click',e=>{
+  const b=e.target.closest('button.ov-chip');
+  if(b){ showOverviewDrawer(+b.dataset.ri,+b.dataset.lvl); return; }
+  const zl=e.target.closest('.znLink');
+  if(zl) openZonesFor(zl.dataset.cat);
+});
+
+/* ---------- CATEGORY TABS (mirror Excel sheets) ---------- */
+const CAT_META={
+  FnV:{igccKey:'FnV',sub:'IGCC side: FnV category quality-resolved %. Parameters: FNV P0 checks.'},
+  DBEM:{igccKey:'DBE',sub:'IGCC side: DBE category quality-resolved %. Parameters: Ambient Noice checks.'},
+  Noice:{igccKey:'Noice',sub:'IGCC side: NOICE brand orders. Parameters grouped by storage zone.'},
+};
+function metricGroup(m){
+  const l=m.toLowerCase();
+  if(l.startsWith('fnv'))return 'FnV';
+  if(l.includes('ac room'))return 'AC room';
+  if(l.startsWith('ambient'))return 'Ambient';
+  if(l.startsWith('chiller'))return 'Chiller';
+  if(l.startsWith('freezer'))return 'Freezer';
+  return 'Other';
+}
+function heatTable(cat){
+  // Excel-style week × parameter heat-mapped table (recomputed for the active scope)
+  const agg=scopeAgg();
+  const mets=DATA.metric_groups[cat];
+  let html=`<table class="wotbl"><thead><tr><th>P0 Parameter (current scope)</th>`;
+  DATA.weeks.forEach(w=>html+=`<th class="num">${w}</th>`);
+  html+=`</tr><tr><td class="cat-cell">IGCC % (${cat==='DBEM'?'DBE':cat})</td>`;
+  (DATA.igcc[cat==='DBEM'?'DBE':cat]||[]).forEach(r=>{ html+=`<td class="num">${fmt(r.pct)}</td>`; });
+  html+=`</tr><tr><td class="cat-cell">No. of audits</td>`;
+  DATA.weeks.forEach(w=>html+=`<td class="num">${agg.audits_per_week[w]}</td>`);
+  html+=`</tr></thead><tbody>`;
+  mets.forEach(m=>{
+    html+=`<tr><td class="pname" title="${esc(m)}">${esc(m.length>60?m.slice(0,60)+'…':m)}</td>`;
+    DATA.weeks.forEach(w=>{
+      const v=agg.metric_weekly[m][w];
+      html+=v==null?`<td class="num" style="color:var(--text-3)">—</td>`:`<td class="${cellCls(v)}">${fmt(v,1)}</td>`;
+    });
+    html+=`</tr>`;
+  });
+  html+=`</tbody></table>`;
+  return html;
+}
+function renderCatTab(cat){
+  const el=document.getElementById('tab-'+cat.toLowerCase());
+  const meta=CAT_META[cat];
+  const scopeNote=state.scope==='all'?'pan-India':(state.scope==='city'?(state.city||'city'):'POD '+(state.pod?podLabel(state.pod):''));
+  let html=`<h2>${cat} — IGCC % vs P0 parameter scores</h2>
+    <div class="sub">${meta.sub} Grain: ${ {D:'daily',W:'weekly',M:'monthly'}[state.grain] } · Scope: ${scopeNote}.</div>
+    <div class="kpis" id="kpi-${cat}"></div>
+    <h2>${cat} — week × parameter heat map</h2>
+    <div class="sub">Score = Σ(scores) ÷ (count × 2) × 100 per week. Shading: green 100 · amber 51–99 · red &lt; 51.</div>
+    <div class="card" style="padding:0"><div class="twrap" id="hm-${cat}"></div></div>`;
+  el.innerHTML=html;
+
+  // KPI cards
+  const ser=seriesForGrain(cat);
+  const khost=el.querySelector('#kpi-'+cat);
+  const sc=ser.score,ig=ser.igcc;
+  const lv=last(sc.filter(v=>v!=null)),lvIg=last(ig.filter(v=>v!=null));
+  const audits=ser.audits, aTot=audits.reduce((a,b)=>a+(b||0),0);
+  khost.innerHTML=`
+    <div class="card kpi"><div class="kl"><span class="kcat">${cat} score</span><span>latest</span></div>
+      <div class="kv" style="color:${scoreColor(lv)}">${fmt(lv,1)}%</div>
+      <div class="kd">${deltaHtml(prevDelta(sc),1)} <span style="color:var(--text-3)">vs prev</span></div></div>
+    <div class="card kpi"><div class="kl"><span class="kcat">IGCC %</span><span>latest</span></div>
+      <div class="kv">${fmt(lvIg)}%</div>
+      <div class="kd">${deltaHtml(prevDelta(ig))} <span style="color:var(--text-3)">vs prev</span></div></div>
+    <div class="card kpi"><div class="kl"><span class="kcat">Audits</span><span>total</span></div>
+      <div class="kv">${aTot}</div>
+      <div class="kd"><span style="color:var(--text-3)">${last(audits)||0} in latest period</span></div></div>`;
+
+  el.querySelector('#hm-'+cat).innerHTML=heatTable(cat);
+}
+
+/* ---------- ZONES ---------- */
+const znState={cat:'all',q:'',week:''};  // week '' = latest audit per POD
+function zone_of(p){ return p==null?null:p>=100?'g':p>=51?'y':'r'; }
+function znPctForImpl(store,cat,week){
+  if(week){
+    const scores=(DATA.pod_metric_weekly[store]||{})[week];
+    if(!scores) return null;
+    const mets=cat==='all'?DATA.metrics:DATA.metric_groups[cat];
+    const idx=mets.map(m=>DATA.metrics.indexOf(m));
+    const vals=idx.map(i=>scores[i]).filter(v=>v!=null);
+    if(!vals.length) return null;
+    // category max = 2 per param; overall = all 12 params (max 24)
+    const max=vals.length*2;
+    return vals.reduce((a,b)=>a+b,0)/max*100;
+  }
+  const r=DATA.pods[store];
+  if(cat==='all') return r.weeks[r.latest_week]?r.weeks[r.latest_week].pct:null;
+  return r.cat_pct&&r.cat_pct[cat]!=null?r.cat_pct[cat]:null;
+}
+function fillZnWeeks(){
+  const sel=document.getElementById('znWeek');
+  const cur=znState.week;
+  sel.innerHTML='<option value="">Latest audit per POD</option>'+
+    DATA.weeks.map(w=>`<option value="${w}"${w===cur?' selected':''}>${w}</option>`).join('');
+}
+function renderZones(){
+  const cols=document.getElementById('zoneCols');
+  const cat=znState.cat;
+  const week=znState.week;
+  const stores=activePods().filter(s=>{
+    const rec=DATA.pods[s];
+    if(znPctForImpl(s,cat,week)==null) return false;
+    if(znState.q){
+      const q=znState.q.toLowerCase();
+      if(!((rec.name||'').toLowerCase().includes(q)||s.includes(q))) return false;
+    }
+    return true;
+  });
+  const buckets={g:[],y:[],r:[]};
+  stores.forEach(s=>{
+    const pct=znPctForImpl(s,cat,week);
+    buckets[zone_of(pct)].push(s);
+  });
+  const catLbl=cat==='all'?'overall (all params)':cat==='DBEM'?'DBE (Ambient Noice params)':cat+' ('+DATA.metric_groups[cat].length+' params)';
+  const weekLbl=week?week:'latest audit per POD';
+  document.getElementById('znSub').textContent=
+    `PODs grouped by their ${catLbl} score (${weekLbl}): Green zone 100% · Yellow zone 51–99% · Red zone <51%. Click a POD's score in the Executive Summary to jump here.`;
+  // summary strip
+  const ng=buckets.g.length, ny=buckets.y.length, nr=buckets.r.length, nt=stores.length;
+  document.getElementById('znSummary').innerHTML=
+    `<div style="display:flex;flex-wrap:wrap;gap:10px 28px;align-items:center">
+      <span style="font-size:12px;color:var(--text-2);font-weight:600">Summary — ${week?week:'Latest audit'}</span>
+      <span><span class="ztag g"><span class="zb zg"></span>Green zone PODs</span> <b style="font-size:20px;color:${zColor('g')}">${ng}</b> <span style="color:var(--text-3)">(${nt?(ng/nt*100).toFixed(1):0}%)</span></span>
+      <span><span class="ztag y"><span class="zb zy"></span>Yellow zone PODs</span> <b style="font-size:20px;color:${zColor('y')}">${ny}</b> <span style="color:var(--text-3)">(${nt?(ny/nt*100).toFixed(1):0}%)</span></span>
+      <span><span class="ztag r"><span class="zb zr"></span>Red zone PODs</span> <b style="font-size:20px;color:${zColor('r')}">${nr}</b> <span style="color:var(--text-3)">(${nt?(nr/nt*100).toFixed(1):0}%)</span></span>
+      <span style="color:var(--text-3);font-size:12px">Total ${nt} PODs</span>
+    </div>`;
+  let html='';
+  ['g','y','r'].forEach(z=>{
+    const list=buckets[z];
+    html+=`<div class="card zcol">
+      <div class="zhead"><span class="ztag ${z}"><span class="zb z${z}"></span>${ZN[z]} PODs</span>
+      <span class="zcount" style="color:${zColor(z)}">${list.length}</span></div>
+      <div class="podlist">`;
+    if(!list.length) html+=`<div class="foot">None</div>`;
+    list.slice(0,300).sort((a,b)=>b.localeCompare(a,undefined,{numeric:true})).forEach(s=>{
+      const rec=DATA.pods[s];
+      const stale=!week&&rec.latest_week!==DATA.weeks[DATA.weeks.length-1];
+      html+=`<div class="prow${stale?' stale':''}" title="${esc(podLabel(s))} — ${esc(rec.city||'')}${rec.city?' · ':''}last audited ${rec.weeks[rec.latest_week].date}">
+        <span>${esc(podLabel(s))}${rec.city?` <span style="color:var(--text-3)">· ${esc(rec.city)}</span>`:''}</span>
+        <span class="num">${stale?'*':''}</span></div>`;
+    });
+    if(list.length>300) html+=`<div class="foot" style="padding:6px 8px">+ ${list.length-300} more…</div>`;
+    html+=`</div></div>`;
+  });
+  cols.innerHTML=html;
+  document.getElementById('znCount').textContent=`${stores.length} PODs`;
+  document.getElementById('znFoot').textContent=
+    week
+      ? `Score basis: ${catLbl} — the POD's audits within ${week} (Σ scores ÷ (2 × params scored) × 100). PODs not audited in ${week} are excluded.`
+      : `* = POD not audited in the latest week (${DATA.weeks[DATA.weeks.length-1]}). Score basis: ${catLbl} — the POD's latest audit only (2nd audit where two exist, 1st where one), blank-skip rule as the Excel sheets.`;
+
+  // movement table
+  const mt=document.getElementById('mvTable');
+  let trs=DATA.transitions.filter(t=>stores.includes(t.store));
+  trs.sort((a,b)=>DATA.weeks.indexOf(b.to_week)-DATA.weeks.indexOf(a.to_week)||a.store.localeCompare(b.store,undefined,{numeric:true}));
+  let html2=`<thead><tr><th>POD</th><th>From</th><th></th><th>To</th><th>Change</th><th class="num">Period</th></tr></thead><tbody>`;
+  if(!trs.length) html2+=`<tr><td colspan="6" style="color:var(--text-3);padding:16px">No zone changes in this scope — PODs stayed in the same zone across audited weeks.</td></tr>`;
+  trs.forEach(t=>{
+    const imp=('gy'.includes(t.from_zone)&&t.to_zone==='g')||(t.from_zone==='r'&&t.to_zone!=='r');
+    html2+=`<tr>
+      <td>${esc(podLabel(t.store))}</td>
+      <td><span class="ztag ${t.from_zone}"><span class="zb z${t.from_zone}"></span>${ZN[t.from_zone]}</span></td>
+      <td class="arrow">→</td>
+      <td><span class="ztag ${t.to_zone}"><span class="zb z${t.to_zone}"></span>${ZN[t.to_zone]}</span></td>
+      <td class="mvchg ${imp?'mv-up':'mv-dn'}">${imp?'▲ improved':'▼ declined'}</td>
+      <td class="num">${t.from_week} → ${t.to_week}</td></tr>`;
+  });
+  mt.innerHTML=html2+'</tbody>';
+  document.getElementById('mvFoot').textContent=
+    `* = POD not audited in the latest week (${DATA.weeks[DATA.weeks.length-1]}); zone shown is from its most recent audit.`;
+}
+document.getElementById('znCat').addEventListener('change',e=>{ znState.cat=e.target.value; renderZones(); });
+document.getElementById('znPod').addEventListener('input',e=>{ znState.q=e.target.value.trim(); renderZones(); });
+document.getElementById('znWeek').addEventListener('change',e=>{ znState.week=e.target.value; renderZones(); });
+function openZonesFor(cat){
+  state.tab='zones';
+  document.querySelectorAll('#nav button').forEach(x=>x.classList.toggle('on',x.dataset.t==='zones'));
+  document.querySelectorAll('.tab').forEach(x=>x.classList.add('hidden'));
+  document.getElementById('tab-zones').classList.remove('hidden');
+  znState.cat=cat;
+  document.getElementById('znCat').value=cat;
+  renderAll();
+}
+
+/* ---------- POD MOVEMENT (zone timeline matrix + watchlists) ---------- */
+/* Zones on this tab: 0–50% red · 51–99% yellow · 100% green (perfect score only). */
+function mvZone(pct){ return pct>=100?'g':pct>=51?'y':'r'; }
+const mvState={list:'all',city:'',q:'',limit:'150'};
+let mvBuilt=false;
+const mvPodRows=Object.keys(DATA.pods).map(s=>{
+  const rec=DATA.pods[s];
+  const zs=DATA.weeks.map(w=>rec.weeks[w]?{pct:rec.weeks[w].pct}:null);
+  zs.forEach(z=>{ if(z) z.z=mvZone(z.pct); });
+  const idx=zs.map((z,i)=>[i,z]).filter(x=>x[1]);
+  const changes=[];
+  for(let k=1;k<idx.length;k++){
+    const [i1,z1]=idx[k-1],[i2,z2]=idx[k];
+    if(z1.z!==z2.z){
+      const imp=(z1.z==='r'&&z2.z!=='r')||z2.z==='g';
+      changes.push({fromW:DATA.weeks[i1],toW:DATA.weeks[i2],from:z1.z,to:z2.z,imp});
+    }
+  }
+  const zones=zs.filter(Boolean).map(x=>x.z);
+  return {
+    store:s,rec,zs,changes,
+    lastZ:zones[zones.length-1],
+    improved:changes.some(c=>c.imp),
+    declined:changes.some(c=>!c.imp),
+    changed:changes.length>0,
+    nchanges:changes.length,
+  };
+});
+function mvMatches(r){
+  if(mvState.list==='rec' && !(r.improved&&!r.declined)) return false;
+  if(mvState.list==='dec' && !(r.declined&&!r.improved)) return false;
+  if(mvState.list==='red' && !(r.lastZ==='r'&&r.zs.filter(Boolean).slice(-3).every(z=>z.z==='r'))) return false;
+  if(mvState.list==='flat' && r.changed) return false;
+  if(mvState.list==='mix' && !(r.improved&&r.declined)) return false;
+  if(mvState.list==='chg' && !r.changed) return false;
+  if(mvState.list==='up' && !(r.improved&&!r.declined)) return false;
+  if(mvState.list==='dn' && !(r.declined&&!r.improved)) return false;
+  if(mvState.city && r.rec.city!==mvState.city) return false;
+  if(mvState.q){
+    const q=mvState.q.toLowerCase();
+    const name=(r.rec.name||'').toLowerCase();
+    if(!name.includes(q) && !r.store.includes(q)) return false;
+  }
+  return true;
+}
+function renderMovement(){
+  if(!mvBuilt){
+    const cities=[...new Set(mvPodRows.map(r=>r.rec.city).filter(Boolean))].sort();
+    document.getElementById('mvCity').innerHTML='<option value="">All cities</option>'+cities.map(c=>`<option>${esc(c)}</option>`).join('');
+    mvBuilt=true;
+  }
+  const rows=mvPodRows.filter(mvMatches);
+  document.getElementById('mvCount').textContent=`${rows.length} PODs`;
+  const nRec=mvPodRows.filter(r=>r.improved&&!r.declined).length;
+  const nDec=mvPodRows.filter(r=>r.declined&&!r.improved).length;
+  const nMix=mvPodRows.filter(r=>r.improved&&r.declined).length;
+  const nRed=mvPodRows.filter(r=>r.lastZ==='r'&&r.zs.filter(Boolean).slice(-3).every(z=>z.z==='r')).length;
+  const nFlat=mvPodRows.filter(r=>!r.changed).length;
+  const total=mvPodRows.length;
+  document.getElementById('mvSub').innerHTML=
+    `Of ${total} PODs: <b style="color:var(--good)">▲ ${nRec} recovered</b> · `+
+    `<b style="color:var(--bad)">▼ ${nDec} declined</b> · `+
+    `<b style="color:var(--warn)">⇅ ${nMix} mixed (both up & down)</b> · `+
+    `<b style="color:var(--bad)">🔴 ${nRed} still red</b> · `+
+    `<b style="color:var(--text-2)">▬ ${nFlat} flat (zone never changed)</b>. `+
+    `Recovered + declined + mixed + flat = ${nRec+nDec+nMix+nFlat} of ${total}. Each cell is the POD's weekly score and its zone.`;
+  const shown=mvState.limit==='all'?rows:rows.slice(0,+mvState.limit);
+  let html='<thead><tr><th>POD</th><th>City</th>'+DATA.weeks.map(w=>`<th class="num">${w}</th>`).join('')+'<th>Latest</th><th>Trend</th></tr></thead><tbody>';
+  if(!shown.length) html+=`<tr><td colspan="${DATA.weeks.length+4}" style="color:var(--text-3);padding:16px">No PODs match these filters.</td></tr>`;
+  shown.forEach(r=>{
+    let tr=r.nchanges===0?'▬ flat':r.improved&&!r.declined?'▲ improved':r.declined&&!r.improved?'▼ declined':'⇅ mixed';
+    const tcls=tr.startsWith('▲')?'mv-up':tr.startsWith('▼')?'mv-dn':'';
+    const lz=r.zs.filter(Boolean).slice(-1)[0];
+    html+=`<tr><td>${esc(podLabel(r.store))}</td><td>${esc(r.rec.city||'—')}</td>`;
+    r.zs.forEach(z=>{ html+=z?`<td class="cell${z.z}">${fmt(z.pct,1)}</td>`:`<td style="color:var(--text-3);text-align:center">–</td>`; });
+    html+=`<td><span class="ztag ${r.lastZ}">${ZN[r.lastZ]}</span></td><td class="mvchg ${tcls}" style="white-space:nowrap">${tr}</td></tr>`;
+  });
+  document.getElementById('mvMatrix').innerHTML=html+'</tbody>';
+}
+document.getElementById('mvList').addEventListener('change',e=>{ mvState.list=e.target.value; renderMovement(); });
+document.getElementById('mvCity').addEventListener('change',e=>{ mvState.city=e.target.value; renderMovement(); });
+document.getElementById('mvLimit').addEventListener('change',e=>{ mvState.limit=e.target.value; renderMovement(); });
+document.getElementById('mvPod').addEventListener('input',e=>{ mvState.q=e.target.value.trim(); renderMovement(); });
+
+/* ---------- tabs & filters wiring ---------- */
+document.getElementById('grain').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b)return;
+  state.grain=b.dataset.g;
+  document.querySelectorAll('#grain button').forEach(x=>x.classList.toggle('on',x===b));
+  renderAll();
+});
+document.getElementById('nav').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b)return;
+  state.tab=b.dataset.t;
+  document.querySelectorAll('#nav button').forEach(x=>x.classList.toggle('on',x===b));
+  document.querySelectorAll('.tab').forEach(x=>x.classList.add('hidden'));
+  document.getElementById('tab-'+state.tab).classList.remove('hidden');
+  renderAll();
+});
+document.getElementById('fScope').addEventListener('change',e=>{
+  state.scope=e.target.value;
+  state.city=''; state.pod='';
+  document.getElementById('fCity').classList.toggle('hidden',state.scope!=='city');
+  document.getElementById('fPod').classList.toggle('hidden',state.scope!=='pod');
+  fillScopeSelects();
+  renderAll();
+});
+document.getElementById('fCity').addEventListener('change',e=>{ state.city=e.target.value; renderAll(); });
+document.getElementById('fPod').addEventListener('change',e=>{ state.pod=e.target.value; renderAll(); });
+
+function fillScopeSelects(){
+  const cs=document.getElementById('fCity'), ps=document.getElementById('fPod');
+  const cities=(DATA.cities||Object.values(DATA.pods).map(p=>p.city).filter(Boolean)).sort();
+  cs.innerHTML='<option value="">Select city…</option>'+cities.map(c=>`<option${c===state.city?' selected':''}>${esc(c)}</option>`).join('');
+  const pods=Object.keys(DATA.pods).sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}));
+  ps.innerHTML='<option value="">Select POD…</option>'+pods.map(p=>{
+    const rec=DATA.pods[p];
+    const lbl=rec.name?`${esc(rec.name)} · ${p}`:p;
+    return `<option value="${esc(p)}"${p===state.pod?' selected':''}>${lbl}</option>`;
+  }).join('');
+}
+
+function filterInfo(){
+  if(state.scope==='all')return'Scope: Pan-India';
+  if(state.scope==='city')return'Scope: '+(state.city||'—')+' ('+activePods().length+' PODs)';
+  return'Scope: POD '+(state.pod?podLabel(state.pod):'—');
+}
+
+/* ---------- render all ---------- */
+let rzT;
+window.addEventListener('resize',()=>{ clearTimeout(rzT); rzT=setTimeout(renderAll,180); });
+function renderAll(){
+  document.getElementById('filterInfo').textContent=filterInfo();
+  if(state.tab==='exec'){ renderSviTable(); renderOverview(); }
+  else if(state.tab==='zones'){ renderZones(); }
+  else if(state.tab==='movement'){ renderMovement(); }
+  else { renderCatTab(state.tab==='fnv'?'FnV':state.tab==='noice'?'Noice':'DBEM'); }
+}
+
+/* ---------- init ---------- */
+document.getElementById('period').textContent=DATA.period+' ('+DATA.weeks[0]+'–'+DATA.weeks[DATA.weeks.length-1]+')';
+document.getElementById('srcNote').textContent='Source: '+DATA.source_file+' — static snapshot, Snowflake integration pending.';
+document.getElementById('pageFoot').textContent='Data window: '+DATA.period+'. Zones: Green zone 100% · Yellow zone 51–99% · Red zone <51%.';
+fillScopeSelects();
+fillZnWeeks();
+renderAll();
+</script>
+</body>
+</html>
