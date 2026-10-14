@@ -681,28 +681,10 @@ function renderCatTab(cat){
   const scopeNote=state.scope==='all'?'pan-India':(state.scope==='city'?(state.city||'city'):'POD '+(state.pod?podLabel(state.pod):''));
   let html=`<h2>${cat} — IGCC % vs P0 parameter scores</h2>
     <div class="sub">${meta.sub} Grain: ${ {D:'daily',W:'weekly',M:'monthly'}[state.grain] } · Scope: ${scopeNote}.</div>
-    <div class="kpis" id="kpi-${cat}"></div>
     <h2>${cat} — week × parameter heat map</h2>
     <div class="sub">Score = Σ(scores) ÷ (count × 2) × 100 per week. Shading: green 100 · amber 51–99 · red &lt; 51.</div>
     <div class="card" style="padding:0"><div class="twrap" id="hm-${cat}"></div></div>`;
   el.innerHTML=html;
-
-  // KPI cards
-  const ser=seriesForGrain(cat);
-  const khost=el.querySelector('#kpi-'+cat);
-  const sc=ser.score,ig=ser.igcc;
-  const lv=last(sc.filter(v=>v!=null)),lvIg=last(ig.filter(v=>v!=null));
-  const audits=ser.audits, aTot=audits.reduce((a,b)=>a+(b||0),0);
-  khost.innerHTML=`
-    <div class="card kpi"><div class="kl"><span class="kcat">${cat} score</span><span>latest</span></div>
-      <div class="kv" style="color:${scoreColor(lv)}">${fmt(lv,1)}%</div>
-      <div class="kd">${deltaHtml(prevDelta(sc),1)} <span style="color:var(--text-3)">vs prev</span></div></div>
-    <div class="card kpi"><div class="kl"><span class="kcat">IGCC %</span><span>latest</span></div>
-      <div class="kv">${fmt(lvIg)}%</div>
-      <div class="kd">${deltaHtml(prevDelta(ig))} <span style="color:var(--text-3)">vs prev</span></div></div>
-    <div class="card kpi"><div class="kl"><span class="kcat">Audits</span><span>total</span></div>
-      <div class="kv">${aTot}</div>
-      <div class="kd"><span style="color:var(--text-3)">${last(audits)||0} in latest period</span></div></div>`;
 
   el.querySelector('#hm-'+cat).innerHTML=heatTable(cat);
 }
