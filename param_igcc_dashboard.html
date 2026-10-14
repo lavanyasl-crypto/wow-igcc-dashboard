@@ -639,11 +639,6 @@ document.addEventListener('click',e=>{
 });
 
 /* ---------- CATEGORY TABS (mirror Excel sheets) ---------- */
-const CAT_META={
-  FnV:{igccKey:'FnV',sub:'IGCC side: FnV category quality-resolved %. Parameters: FNV P0 checks.'},
-  DBEM:{igccKey:'DBE',sub:'IGCC side: DBE category quality-resolved %. Parameters: Ambient Noice checks.'},
-  Noice:{igccKey:'Noice',sub:'IGCC side: NOICE brand orders. Parameters grouped by storage zone.'},
-};
 function metricGroup(m){
   const l=m.toLowerCase();
   if(l.startsWith('fnv'))return 'FnV';
@@ -677,11 +672,7 @@ function heatTable(cat){
 }
 function renderCatTab(cat){
   const el=document.getElementById('tab-'+cat.toLowerCase());
-  const meta=CAT_META[cat];
-  const scopeNote=state.scope==='all'?'pan-India':(state.scope==='city'?(state.city||'city'):'POD '+(state.pod?podLabel(state.pod):''));
-  let html=`<h2>${cat} — IGCC % vs P0 parameter scores</h2>
-    <div class="sub">${meta.sub} Grain: ${ {D:'daily',W:'weekly',M:'monthly'}[state.grain] } · Scope: ${scopeNote}.</div>
-    <h2>${cat} — week × parameter heat map</h2>
+  let html=`<h2>${cat} — week × parameter heat map</h2>
     <div class="sub">Score = Σ(scores) ÷ (count × 2) × 100 per week. Shading: green 100 · amber 51–99 · red &lt; 51.</div>
     <div class="card" style="padding:0"><div class="twrap" id="hm-${cat}"></div></div>`;
   el.innerHTML=html;
